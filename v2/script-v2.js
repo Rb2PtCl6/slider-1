@@ -38,7 +38,6 @@ export default class viewer{
             console.error(`Error fetching JSON from ${json_url}`, error);
         });
     }
-    /* пофиксить проблему с индексими больше размера массива + 1 и с индексами меньше нуля*/
     #validate_active_slide(){
         //console.log(this.#active_slide)
         if (this.#active_slide < 1){

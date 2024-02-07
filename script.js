@@ -1,55 +1,75 @@
 export default class viewer{
     #data = []
-    #pointer = {}
+    #pointer = {
+        header_id: undefined,
+        select_id: undefined,
+        reader_id: undefined,
+        controls:{
+            prew_id: undefined,
+            next_id: undefined
+        },
+    }
     #active_slide = localStorage.getItem("test_active_slide") | 0
     #max_slide = 1
     constructor(pointer, json_url){
+        if (!json_url || !pointer){
+            throw new Error("No input parameters found!");
+        }
+        this.#validatePointer(this.#pointer,pointer)
+        this.#validateElements(pointer)
         this.#pointer = pointer;
         this.readJson(json_url)
-        .then((images) =>{
+        .then((images) => {
             this.#max_slide = images.length
+            this.#validate_active_slide()
             for (let i = 0; i < this.#max_slide; i++) {
                 this.#data[i] = { id: i, url: images[i], is_loaded: false };
             }
-            this.#validate_active_slide()
-            console.log(this.#data)
-            this.makeSelect("header")
-            this.setCurrentNumberInSelect()
-            this.handleSelect()
+            //console.log(this.#data)
+            this.makeSelect()
             this.fillViewer()
-            this.changeHandler(this.#pointer.controls.prew_id, this.#pointer.controls.next_id)
+            this.registerHandlers()
         })
-        .catch(error => {
+        .catch((error) => {
             console.error(`Error fetching JSON from ${json_url}`, error);
         });
     }
-    /* пофиксить проблему с индексими больше размера массива + 1 и с индексами меньше нуля*/
     #validate_active_slide(){
-        //console.log(this.#active_slide)
         if (this.#active_slide < 0){
+            localStorage.setItem("test_active_slide",0)
             this.#active_slide = 0
-        } else if (this.#active_slide + 1 >= this.#max_slide){
+        } else if (this.#active_slide > this.#max_slide){
+            localStorage.setItem("test_active_slide",this.#max_slide - 1)
             this.#active_slide = this.#max_slide - 1
         }
-        //console.log(this.#active_slide)
+    }
+    #validatePointer(pointer1, pointer2){
+        for (var i of Object.keys(pointer1)){
+            if (!pointer2.hasOwnProperty(i)){
+                throw new Error("No necessary pointer's key found!");
+            }
+            if (typeof pointer1[i] == "object"){
+                this.#validatePointer(pointer1[i],pointer2[i])
+            }
+        }
+    }
+    #validateElements(pointer){
+        for (var i of Object.keys(pointer)){
+            if (typeof pointer[i] == "object"){
+                this.#validateElements(pointer[i])
+            } else if (!this.makeId(pointer[i])){
+                throw new Error("No necessary element found!");
+            }
+        }
     }
     fillViewer(){
-        this.#data.forEach((_,i) => {
+        for (var i = 0; i < this.#max_slide; i++){
             this.createRawBox(this.#pointer.reader_id, `page${i}`)
-        })
+        }
         this.toggleHidden(`page${this.#active_slide}`)
-        this.load_first()
+        this.downloadImage(this.#active_slide)
     }
-    load_first(){
-        //console.log(this.#data[this.#active_slide].url)
-        this.downloadImage(this.#active_slide,this.#data[this.#active_slide].url)
-        this.#data[this.#active_slide].is_loaded = true
-        this.makeId("selection").selectedIndex = this.#active_slide
-    }
-    makeSelect(id){
-        var elem = document.createElement("select")
-        elem.id = "selection"
-        elem.name = "selection"
+    makeSelect(){
         var tmp = ""
         for(var i = 0; i < this.#max_slide; i++){
             if (i == this.#active_slide){
@@ -58,27 +78,21 @@ export default class viewer{
                 tmp += `<option value="${i}">${i + 1} / ${this.#max_slide}</option>`
             }
         }
-        elem.innerHTML = tmp
-        this.makeId(id).append(elem)
+        this.makeId(this.#pointer.select_id).innerHTML = tmp
+        this.toggleHidden(this.#pointer.select_id)
     }
     /**
-     * @param {string} where_element
-     * @param {string} id
+     * @param {string} parent_id
+     * @param {string} child_id
      */
-    createRawBox(where_element, id){
+    createRawBox(parent_id, child_id){
         var elem = document.createElement("div")
-        elem.id = id
+        elem.id = child_id
         elem.classList.add("page","loading","hidden")
         elem.innerHTML = "<img class='page_img'></img>"
-        this.makeId(where_element).append(elem)
+        this.makeId(parent_id).append(elem)
     }
     // operations with numbers
-    /**
-     * @return {number}
-     */
-    get getCurrentNumber(){ 
-        return this.#active_slide
-    }
     /**
      * @param {number} num
      */
@@ -89,39 +103,7 @@ export default class viewer{
     }
     // block's changers
     setCurrentNumberInSelect(num){
-        this.makeId("selection").selectedIndex = num
-    }
-    nextImage(){
-        //console.log(this.#data)
-        //console.log("next")
-        var current = this.getCurrentNumber
-        var this_id = `page${current}`
-        var next_id = `page${current+1}`
-        if (current < this.#max_slide - 1){
-            this.toggleHidden(this_id)
-            this.toggleHidden(next_id)
-            this.setCurrentNumber(current+1)
-            if (!this.#data[this.#active_slide].is_loaded){
-                //console.log("open next")
-                this.downloadImage(this.#active_slide)
-                this.#data[this.#active_slide-1].is_loaded = true
-            }
-        }
-    }
-    prevImage(){
-        //console.log("prew")
-        var current = this.getCurrentNumber
-        var this_id = `page${current}`
-        var prew_id = `page${current-1}`
-        if (current > 0){
-            this.toggleHidden(this_id)
-            this.toggleHidden(prew_id)
-            this.setCurrentNumber(current - 1)
-            if (!this.#data[this.#active_slide].is_loaded){
-                this.downloadImage(this.#active_slide)
-                this.#data[this.#active_slide].is_loaded = true
-            }
-        }
+        this.makeId(this.#pointer.select_id).selectedIndex = num
     }
     // hide/shiw bloks
     toggleHidden(id){
@@ -153,47 +135,35 @@ export default class viewer{
         }
     }
     changeSlide(new_num){
-        console.log("change")
-        var current = this.getCurrentNumber
+        var current = this.#active_slide
         var this_id = `page${current}`
         var new_id = `page${new_num}`
-        if (true){
+        if (new_num >= 0 && new_num < this.#max_slide ){
             this.toggleHidden(this_id)
             this.toggleHidden(new_id)
             this.setCurrentNumber(new_num)
             if (!this.#data[this.#active_slide].is_loaded){
                 this.downloadImage(this.#active_slide)
-                this.#data[this.#active_slide].is_loaded = true
             }
         }
     }
     // event handlers
-    handleSelect(){
-        var _this = this
-        this.makeId("selection").addEventListener("change",function(){
-            var selected = _this.makeId("selection").selectedIndex
-            console.log(selected)
-            _this.changeSlide(selected)
-        })
-    }
-    changeHandler(prew_arrow_element, next_arrow_element){
-        var _this = this
-        document.onkeydown = function(e){
+    registerHandlers(){
+        document.onkeydown = (e) => {
             if (e.key == "ArrowLeft"){
-                (function(){
-                    _this.prevImage()
-                })()
+                this.changeSlide(this.#active_slide - 1)
             } else if (e.key == "ArrowRight"){
-                (function(){
-                    _this.nextImage()
-                })()
+                this.changeSlide(this.#active_slide + 1)
             }
         }
-        this.makeId(prew_arrow_element).addEventListener("click",function(){
-            _this.prevImage()
+        this.makeId(this.#pointer.controls.prew_id).addEventListener("click", () => { 
+            this.changeSlide(this.#active_slide - 1) 
         })
-        this.makeId(next_arrow_element).addEventListener("click",function(){
-            _this.nextImage()
+        this.makeId(this.#pointer.controls.next_id).addEventListener("click", () => { 
+            this.changeSlide(this.#active_slide + 1) 
+        })
+        this.makeId(this.#pointer.select_id).addEventListener("change", () => {
+            this.changeSlide(this.makeId(this.#pointer.select_id).selectedIndex)
         })
     }
     // network
@@ -203,13 +173,12 @@ export default class viewer{
         return Object.values(json)
     }
     downloadImage(id){
-        //console.log(url)
-        var this_ = this
+        var _this = this
         var downImage = new Image
-        downImage.onload = function(){ 
-            this_.removeLoading(`page${id}`)
-            //document.querySelector(`#page${id} img`).style.aspectRatio = `${downImage.width}/${downImage.height}`;
-            document.querySelector(`#page${id} img`).classList.add(this_.selectSize(`page${id}`, downImage.height, downImage.width))
+        downImage.onload = function(){
+            _this.removeLoading(`page${id}`)
+            document.querySelector(`#page${id} img`).classList.add(_this.selectSize(`page${id}`, this.height, this.width))
+            _this.#data[id].is_loaded = true
             document.querySelector(`#page${id} img`).src = this.src
         }
         downImage.src = this.#data[id].url

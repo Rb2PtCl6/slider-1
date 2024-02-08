@@ -1,7 +1,6 @@
 export default class viewer{
     #data = []
     #pointer = {
-        header_id: undefined,
         select_id: undefined,
         reader_id: undefined,
         controls:{
@@ -13,16 +12,14 @@ export default class viewer{
     #max_slide = 1
     constructor(pointer, json_url){
         if (!json_url || !pointer){
-            throw new Error("No input parameters found!");
+            this.showError("No input parameters found!");
         }
-        this.#validatePointer(this.#pointer,pointer)
-        this.#validateElements(pointer)
-        this.#pointer = pointer;
+        this.#checkPointer(this.#pointer, pointer, "")
         this.readJson(json_url)
         .then((images) => {
             this.#max_slide = images.length
             this.#validate_active_slide()
-            for (let i = 0; i < this.#max_slide; i++) {
+            for (var i = 0; i < this.#max_slide; i++) {
                 this.#data[i] = { id: i, url: images[i], is_loaded: false };
             }
             //console.log(this.#data)
@@ -31,7 +28,7 @@ export default class viewer{
             this.registerHandlers()
         })
         .catch((error) => {
-            console.error(`Error fetching JSON from ${json_url}`, error);
+            this.showError(`Error fetching JSON from ${json_url}`, error);
         });
     }
     #validate_active_slide(){
@@ -43,24 +40,40 @@ export default class viewer{
             this.#active_slide = this.#max_slide - 1
         }
     }
-    #validatePointer(pointer1, pointer2){
+    /**
+     * @param {object} pointer1
+     * @param {object} pointer2
+     */
+    #checkPointer(pointer1, pointer2, base){
         for (var i of Object.keys(pointer1)){
-            if (!pointer2.hasOwnProperty(i)){
-                throw new Error("No necessary pointer's key found!");
-            }
-            if (typeof pointer1[i] == "object"){
-                this.#validatePointer(pointer1[i],pointer2[i])
+            if (pointer1.hasOwnProperty(i)){
+                if (!pointer2[i]){
+                    this.showError("Empty key found!")
+                } else {
+                    if (typeof pointer2[i] == "object"){
+                        this.#checkPointer(pointer1[i],pointer2[i],i)
+                    } else if (typeof pointer2[i] == "string"){
+                        if (this.makeId(pointer2[i])){
+                            var where = this.#pointer
+                            if (base != ""){
+                                where = where[base]
+                            }
+                            where[i] = pointer2[i]
+                        } else {
+                            this.showError("No necessary element found!")
+                        }
+                    } else {
+                        this.showError(`Wrong type of value found!`)
+                    }
+                }
+            } else {
+                this.showError("No necessary pointer's key found!")
             }
         }
     }
-    #validateElements(pointer){
-        for (var i of Object.keys(pointer)){
-            if (typeof pointer[i] == "object"){
-                this.#validateElements(pointer[i])
-            } else if (!this.makeId(pointer[i])){
-                throw new Error("No necessary element found!");
-            }
-        }
+    showError(text){
+        alert(text)
+        throw new Error(text)
     }
     fillViewer(){
         for (var i = 0; i < this.#max_slide; i++){

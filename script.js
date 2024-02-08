@@ -63,7 +63,7 @@ export default class viewer{
                             this.showError("No necessary element found!")
                         }
                     } else {
-                        this.showError(`Wrong type of value found!`)
+                        this.showError("Wrong type of value found!")
                     }
                 }
             } else {

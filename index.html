@@ -11,6 +11,8 @@
             margin: 0;
             padding: 0;
             overflow: hidden;
+            color: aliceblue;
+            font-family: Arial, Helvetica, sans-serif;
         }
         #main1 {
             width: 100vw;
@@ -19,7 +21,7 @@
             flex-direction: column;
             
         }
-        #header, option {
+        #header {
             z-index: 3;
             height: 10%;
             width: 100%;
@@ -27,8 +29,6 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            color: aliceblue;
-            font-family: Arial, Helvetica, sans-serif;
             font-size: 4vh;
         }
         #main2 {
@@ -58,8 +58,6 @@
             width: 6%;
             background-color: rgba(22, 144, 19, 0.614);
             font-size: 5vw;
-            font-family: Arial, Helvetica, sans-serif;
-            color: aliceblue;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -78,10 +76,10 @@
         }
         .page_img_auto_100 {
             width: auto;
-            height: 100vh;
+            height: 100%;
         }
         .page_img_100_auto {
-            width: 100vw;
+            width: 100%;
             height: auto;
         }
         .loading {
@@ -95,6 +93,13 @@
             color: aliceblue;
             font-family: Arial, Helvetica, sans-serif;
             font-size: 4vh;
+            border-radius: 7px;
+            border: 1px solid aliceblue;
+        }
+        option {
+            background-color: rgb(43, 142, 68);
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 3vh;
         }
     </style>
 </head>
@@ -113,7 +118,7 @@
     </div>
     <script type="module">
         import viewer from './script.js'
-        var  pointer = {
+        var pointer = {
             select_id: "selection",
             reader_id: "reader",
             controls: {

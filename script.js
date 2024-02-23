@@ -10,6 +10,10 @@ export default class viewer{
     }
     #active_slide = localStorage.getItem("test_active_slide") | 0
     #max_slide = 1
+    /**
+     * @param {object} pointer
+     * @param {string} json_url
+     */
     constructor(pointer, json_url){
         if (!json_url || !pointer){
             this.showError("No input parameters found!");
@@ -43,6 +47,7 @@ export default class viewer{
     /**
      * @param {object} pointer1
      * @param {object} pointer2
+     * @param {string} base
      */
     #checkPointer(pointer1, pointer2, base){
         for (var i of Object.keys(pointer1)){
@@ -71,6 +76,9 @@ export default class viewer{
             }
         }
     }
+    /**
+     * @param {string} text
+     */
     showError(text){
         alert(text)
         throw new Error(text)
@@ -102,7 +110,6 @@ export default class viewer{
         var elem = document.createElement("div")
         elem.id = child_id
         elem.classList.add("page","loading","hidden")
-        elem.innerHTML = "<img class='page_img'></img>"
         this.makeId(parent_id).append(elem)
     }
     // operations with numbers
@@ -119,34 +126,47 @@ export default class viewer{
         this.makeId(this.#pointer.select_id).selectedIndex = num
     }
     // hide/shiw bloks
+    /**
+     * @param {number} id
+     */
     toggleHidden(id){
         this.makeId(id).classList.toggle("hidden")
     }
     // remove loading icon
-    removeLoading(id){
-        this.makeId(id).classList.remove("loading")
+    /**
+     * @param {number} id
+     */
+    markAsLoaded(id){
+        this.makeId(`page${id}`).classList.remove("loading")
+        this.#data[id].is_loaded = true
     }
     /**
+     * @param {number} id
      * @return {HTMLElement}
      */
     makeId(id){
         return document.getElementById(id)
     }
+    /**
+     * @param {number} id
+     * @param {number} img_h
+     * @param {number} img_w
+     */
     selectSize(id, img_h, img_w){
-        var classes = ["page_img_auto_100","page_img_100_auto"];
-        //alert(`img: { w: ${img_w}, h: ${img_h}}\nblock: { w: ${document.querySelector(`#page${id}`).clientWidth}, h: ${document.querySelector(`#page${id}`).clientHeight}}`)
+        var classes = ["page_img_auto_100","page_img_100_auto"]
         var block_height = this.makeId(id).clientHeight;
         var block_width = this.makeId(id).clientWidth;
-    
-        var img_props = img_w / img_h;
-        var block_props = block_width / block_height;
-    
-        if (img_props > block_props){
-            return classes[1];
+
+        var k = block_height / img_h
+        if (img_w * k <= block_width){
+            return classes[0]
         } else {
-            return classes[0];
+            return classes[1]
         }
     }
+    /**
+     * @param {number} new_num
+     */
     changeSlide(new_num){
         var current = this.#active_slide
         var this_id = `page${current}`
@@ -180,20 +200,25 @@ export default class viewer{
         })
     }
     // network
+    /**
+     * @param {string} url
+     * @return {Promise<string[]>}
+     */
     async readJson(url){
         var response = await fetch(url)
         var json = await response.json();
         return Object.values(json)
     }
+    /**
+     * @param {number} id
+     */
     downloadImage(id){
-        var _this = this
         var downImage = new Image
-        downImage.onload = function(){
-            _this.removeLoading(`page${id}`)
-            document.querySelector(`#page${id} img`).classList.add(_this.selectSize(`page${id}`, this.height, this.width))
-            _this.#data[id].is_loaded = true
-            document.querySelector(`#page${id} img`).src = this.src
-        }
+        downImage.addEventListener("load", () => {
+            this.markAsLoaded(id)
+            downImage.classList.add(this.selectSize(`page${id}`, downImage.height, downImage.width))
+            this.makeId(`page${id}`).append(downImage)
+        })
         downImage.src = this.#data[id].url
     }
 }

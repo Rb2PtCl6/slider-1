@@ -24,8 +24,11 @@ export default class viewer{
             this.#max_slide = images.length
             this.#validate_active_slide()
             for (var i = 0; i < this.#max_slide; i++) {
-                this.#data[i] = { id: i, url: images[i], is_loaded: false };
+                this.#data[i] = { url: images[i], is_loaded: false };
             }
+            console.table(images)
+            console.table(this.#data)
+            console.table(this.#data[1])
             //console.log(this.#data)
             this.makeSelect()
             this.fillViewer()

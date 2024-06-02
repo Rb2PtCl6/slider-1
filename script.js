@@ -31,6 +31,7 @@ export default class viewer{
             console.table(this.#data[1])
             //console.log(this.#data)
             this.makeSelect()
+            this.setImgSize()
             this.fillViewer()
             this.registerHandlers()
         })
@@ -92,6 +93,7 @@ export default class viewer{
         }
         this.toggleHidden(`page${this.#active_slide}`)
         this.downloadImage(this.#active_slide)
+        
     }
     makeSelect(){
         var tmp = ""
@@ -150,22 +152,17 @@ export default class viewer{
     makeId(id){
         return document.getElementById(id)
     }
-    /**
-     * @param {number} id
-     * @param {number} img_h
-     * @param {number} img_w
-     */
-    selectSize(id, img_h, img_w){
-        var classes = ["page_img_auto_100","page_img_100_auto"]
-        var block_height = this.makeId(id).clientHeight;
-        var block_width = this.makeId(id).clientWidth;
-
-        var k = block_height / img_h
-        if (img_w * k <= block_width){
-            return classes[0]
-        } else {
-            return classes[1]
-        }
+    setImgSize(){
+        var css_block = document.createElement("style")
+        css_block.innerText = `.page_img {
+            height : ${document.querySelector("body").clientHeight*0.9}px;
+            width : ${document.querySelector("body").clientWidth*1}px;
+            z-index: 10;
+            position: relative;
+            object-fit: contain;
+        }`
+        document.getElementById("main1").append(css_block) 
+        console.log(document.querySelector("body").clientHeight)
     }
     /**
      * @param {number} new_num
@@ -219,7 +216,7 @@ export default class viewer{
         var downImage = new Image
         downImage.addEventListener("load", () => {
             this.markAsLoaded(id)
-            downImage.classList.add(this.selectSize(`page${id}`, downImage.height, downImage.width))
+            downImage.classList.add("page_img")
             this.makeId(`page${id}`).append(downImage)
         })
         downImage.src = this.#data[id].url

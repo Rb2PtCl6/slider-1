@@ -155,14 +155,13 @@ export default class viewer{
     setImgSize(){
         var css_block = document.createElement("style")
         css_block.innerText = `.page_img {
-            height : ${document.querySelector("body").clientHeight*0.9}px;
-            width : ${document.querySelector("body").clientWidth*1}px;
+            height : ${this.makeId("main1").clientHeight*0.9}px;
+            width : ${this.makeId("main1").clientWidth}px;
             z-index: 10;
             position: relative;
             object-fit: contain;
         }`
-        document.getElementById("main1").append(css_block) 
-        console.log(document.querySelector("body").clientHeight)
+       this.makeId("main1").append(css_block) 
     }
     /**
      * @param {number} new_num

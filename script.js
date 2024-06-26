@@ -22,21 +22,18 @@ export default class viewer{
         this.readJson(json_url)
         .then((images) => {
             this.#max_slide = images.length
-            this.#validate_active_slide()
             for (var i = 0; i < this.#max_slide; i++) {
                 this.#data[i] = { url: images[i], is_loaded: false };
             }
-            console.table(images)
             console.table(this.#data)
-            console.table(this.#data[1])
-            //console.log(this.#data)
+            this.#validate_active_slide()
             this.makeSelect()
             this.setImgSize()
             this.fillViewer()
             this.registerHandlers()
         })
         .catch((error) => {
-            this.showError(`Error fetching JSON from ${json_url}`, error);
+            this.showError(`Error fetching JSON from ${json_url} or failed to render:`, error);
         });
     }
     #validate_active_slide(){
@@ -157,8 +154,6 @@ export default class viewer{
         css_block.innerText = `.page_img {
             height : ${this.makeId("main1").clientHeight*0.9}px;
             width : ${this.makeId("main1").clientWidth}px;
-            z-index: 10;
-            position: relative;
             object-fit: contain;
         }`
        this.makeId("main1").append(css_block) 

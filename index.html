@@ -51,18 +51,30 @@
             display: flex;
             justify-content: space-between;
             flex-direction: row;
+            cursor: pointer;
+            user-select: none;
+        }
+        #prew{
+            justify-content: start;
+        }
+        #next{
+            justify-content: end;
         }
         .control_element {
             height: 100%;
-            width: 6%;
+            width: 12%;
             background-color: rgba(22, 144, 19, 0.614);
             font-size: 5vw;
             display: flex;
             justify-content: center;
             align-items: center;
-            cursor: pointer;
-            user-select: none;
             z-index: 1;
+        }
+        .invisible-control{
+            height: 100%;
+            width: 50%;
+            display: flex;
+            justify-content: center;
         }
         .hidden {
             display: none !important
@@ -100,8 +112,12 @@
         <div id="main2">
             <div id="reader"></div>
             <div id="controls">
-                <div id="prew" class="control_element"><</div>
-                <div id="next" class="control_element">></div>
+                <div class="invisible-control" id="prew">
+                    <div class="control_element"><</div>
+                </div>
+                <div class="invisible-control" id="next">
+                    <div class="control_element">></div>
+                </div>
             </div>
         </div>
     </div>
